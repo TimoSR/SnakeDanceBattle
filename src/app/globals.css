@@ -212,18 +212,27 @@ body {
 
 @keyframes snake-billion-energy {
   0% {
+    transform: translateX(0) translateY(0) rotate(0deg) scale(1);
     text-shadow:
       0 0 14px rgba(216, 180, 255, 0.86),
       0 0 22px rgba(255, 255, 255, 0.44);
     filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.4));
   }
+  25% {
+    transform: translateX(-1px) translateY(-1px) rotate(-0.8deg) scale(1.015);
+  }
   50% {
+    transform: translateX(1px) translateY(-2px) rotate(1deg) scale(1.03);
     text-shadow:
       0 0 20px rgba(216, 180, 255, 0.95),
       0 0 34px rgba(255, 255, 255, 0.72);
     filter: drop-shadow(0 0 11px rgba(255, 255, 255, 0.6));
   }
+  75% {
+    transform: translateX(-1px) translateY(-1px) rotate(-0.7deg) scale(1.02);
+  }
   100% {
+    transform: translateX(0) translateY(0) rotate(0deg) scale(1);
     text-shadow:
       0 0 14px rgba(216, 180, 255, 0.86),
       0 0 22px rgba(255, 255, 255, 0.44);
