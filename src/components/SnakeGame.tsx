@@ -6,7 +6,7 @@ import SnakeHeader from '@/components/snake/SnakeHeader'
 import { useSnakeGame } from '@/components/snake/useSnakeGame'
 import type { SnakeGameProps } from '@/components/snake/types'
 
-export default function SnakeGame({ topTenCutoffScore, onRoundComplete }: SnakeGameProps) {
+export default function SnakeGame({ topTenCutoffScore, highScore, onRoundComplete }: SnakeGameProps) {
   const RAPID_GAIN_WINDOW_MS = 1800
   const RAPID_GAIN_THRESHOLD = 1_000_000
 
@@ -94,6 +94,7 @@ export default function SnakeGame({ topTenCutoffScore, onRoundComplete }: SnakeG
       <div className="mb-1">
         <SnakeHeader
           score={game.score}
+          highScore={highScore}
           scoreToTopTenProgress={scoreToTopTenProgress}
           isHighScoreHypeActive={isHighScoreHypeActive}
           highScoreHypeKey={highScoreHypeKey}

@@ -298,6 +298,51 @@ export function useSnakeGame({ onRoundComplete }: UseSnakeGameParams) {
     })
   }, [])
 
+  const resetTransientGameState = useCallback(() => {
+    setBoardEffect('none')
+    setYellowWaveActive(false)
+    setYellowWaveExpanded(false)
+    setAreFoodsPurple(false)
+    setPurpleFoodModeEatsLeft(0)
+    setApplesEatenCount(0)
+    setPurpleBonus({
+      active: false,
+      hasSpawned: false,
+      x: 0,
+      y: 0,
+      direction: 'right',
+    })
+    setPurpleSpawnCount(0)
+    setYellowBonus({
+      active: false,
+      hasSpawned: false,
+      x: 0,
+      y: 0,
+      direction: 'left',
+    })
+    setPinkBonus({
+      active: false,
+      hasSpawned: false,
+      x: 0,
+      y: 0,
+      spiralDirectionIndex: 0,
+      spiralSegmentLength: 2,
+      spiralStepsInSegment: 0,
+      spiralSegmentsAtCurrentLength: 0,
+    })
+    setSpeedBoostExpiresAt(null)
+    setPurpleSlowMotionExpiresAt(null)
+    setPurplePointsBoostStacks(0)
+    setPointAmplificationLevel(0)
+    setBonusMultiplierOffset(0)
+    setIsDiscoBurstActive(false)
+    setDiscoBurstHue(null)
+    setPointsPopup([])
+    setEatParticleBursts([])
+    lastBonusSpawnRollAppleRef.current = 0
+    didRunImmediateTickRef.current = false
+  }, [])
+
   useEffect(() => {
     return () => {
       if (discoBurstTimeoutRef.current !== null) {
@@ -341,49 +386,9 @@ export function useSnakeGame({ onRoundComplete }: UseSnakeGameParams) {
 
   useEffect(() => {
     if (game.score === 0 && game.tickCount === 0) {
-      setBoardEffect('none')
-      setYellowWaveActive(false)
-      setYellowWaveExpanded(false)
-      setAreFoodsPurple(false)
-      setPurpleFoodModeEatsLeft(0)
-      setApplesEatenCount(0)
-      setPurpleBonus({
-        active: false,
-        hasSpawned: false,
-        x: 0,
-        y: 0,
-        direction: 'right',
-      })
-      setPurpleSpawnCount(0)
-      setYellowBonus({
-        active: false,
-        hasSpawned: false,
-        x: 0,
-        y: 0,
-        direction: 'left',
-      })
-      setPinkBonus({
-        active: false,
-        hasSpawned: false,
-        x: 0,
-        y: 0,
-        spiralDirectionIndex: 0,
-        spiralSegmentLength: 2,
-        spiralStepsInSegment: 0,
-        spiralSegmentsAtCurrentLength: 0,
-      })
-      setSpeedBoostExpiresAt(null)
-      setPurpleSlowMotionExpiresAt(null)
-      setPurplePointsBoostStacks(0)
-      setPointAmplificationLevel(0)
-      setBonusMultiplierOffset(0)
-      setIsDiscoBurstActive(false)
-      setDiscoBurstHue(null)
-      setPointsPopup([])
-      setEatParticleBursts([])
-      lastBonusSpawnRollAppleRef.current = 0
+      resetTransientGameState()
     }
-  }, [game.score, game.tickCount])
+  }, [game.score, game.tickCount, resetTransientGameState])
 
   useEffect(() => {
     if (speedBoostExpiresAt === null) {
@@ -847,13 +852,14 @@ export function useSnakeGame({ onRoundComplete }: UseSnakeGameParams) {
 
       if (lowerKey === 'r') {
         event.preventDefault()
+        resetTransientGameState()
         setGame((current) => restart(current))
       }
     }
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [])
+  }, [resetTransientGameState])
 
   const snakeCells = useMemo(() => new Set(game.snake.map((segment) => `${segment.x},${segment.y}`)), [game.snake])
   const foodKeys = useMemo(() => new Set(game.foods.map((food) => `${food.x},${food.y}`)), [game.foods])
@@ -867,7 +873,10 @@ export function useSnakeGame({ onRoundComplete }: UseSnakeGameParams) {
       status: togglePause(current.status),
     }))
 
-  const restartAction = () => setGame((current) => restart(current))
+  const restartAction = () => {
+    resetTransientGameState()
+    setGame((current) => restart(current))
+  }
 
   return {
     game,

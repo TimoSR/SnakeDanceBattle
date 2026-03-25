@@ -43,6 +43,7 @@ export default function Home() {
         <div className="flex justify-center py-6 sm:py-8">
           <SnakeGame
             topTenCutoffScore={topTenCutoffScore}
+            highScore={highScore}
             onRoundComplete={handleRoundComplete}
           />
         </div>
