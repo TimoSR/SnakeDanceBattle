@@ -143,9 +143,10 @@ function nextPinkSpiralState(
 }
 
 export function useSnakeGame({ onRoundComplete }: UseSnakeGameParams) {
-  const [game, setGame] = useState(() =>
-    createInitialState(GRID_SIZE, GRID_SIZE, { initialLength: INITIAL_LENGTH })
-  )
+  const [game, setGame] = useState(() => ({
+    ...createInitialState(GRID_SIZE, GRID_SIZE, { initialLength: INITIAL_LENGTH }),
+    status: 'paused' as GameStatus,
+  }))
   const [boardEffect, setBoardEffect] = useState<'none' | 'eat' | 'damage' | 'penalty'>('none')
   const [speedBoostExpiresAt, setSpeedBoostExpiresAt] = useState<number | null>(null)
   const [purpleSlowMotionExpiresAt, setPurpleSlowMotionExpiresAt] = useState<number | null>(null)
@@ -193,7 +194,6 @@ export function useSnakeGame({ onRoundComplete }: UseSnakeGameParams) {
   })
 
   const previousStatusRef = useRef<GameStatus>(game.status)
-  const previousSnakeLengthRef = useRef(game.snake.length)
   const discoBurstTimeoutRef = useRef<number | null>(null)
   const boardEffectStartTimeoutRef = useRef<number | null>(null)
   const boardEffectEndTimeoutRef = useRef<number | null>(null)
@@ -201,6 +201,7 @@ export function useSnakeGame({ onRoundComplete }: UseSnakeGameParams) {
   const eatParticleBurstIdRef = useRef(0)
   const eatParticleTimeoutsRef = useRef<number[]>([])
   const lastBonusSpawnRollAppleRef = useRef(0)
+  const didRunImmediateTickRef = useRef(false)
   const isSpeedBoostActive = speedBoostExpiresAt !== null
   const isPurpleSlowMotionActive = purpleSlowMotionExpiresAt !== null
   const isPermanentPointsBoostActive = purplePointsBoostStacks > 0
@@ -331,43 +332,6 @@ export function useSnakeGame({ onRoundComplete }: UseSnakeGameParams) {
     }
     previousStatusRef.current = game.status
   }, [game.score, game.status, onRoundComplete, triggerBoardEffect, triggerDiscoBurst])
-
-  useEffect(() => {
-    if (game.tickCount > 0 && game.snake.length > previousSnakeLengthRef.current) {
-      const head = game.snake[0]
-      setPointAmplificationLevel((level) => level + 1)
-      setApplesEatenCount((count) => count + 1)
-
-      if (areFoodsPurple) {
-        setPurplePointsBoostStacks((stacks) => stacks + 1)
-        setPurpleSlowMotionExpiresAt(Date.now() + PURPLE_SLOW_MOTION_DURATION_MS)
-        recoverBonusOffset(PURPLE_BONUS_RECOVERY)
-        triggerBoardEffect('eat', 180)
-        triggerDiscoBurst(282, 340)
-        setYellowWaveKey((current) => current + 1)
-        triggerPointsPopup(`${formatBonusMultiplierForPopup(bonusMultiplier)}X`)
-        triggerEatParticles('purple', head.x, head.y)
-        setPurpleFoodModeEatsLeft((current) => Math.max(0, current - 1))
-      } else {
-        triggerBoardEffect('eat', 180)
-        triggerDiscoBurst(148, 260)
-        recoverBonusOffset(APPLE_BONUS_RECOVERY)
-        triggerPointsPopup(`${formatBonusMultiplierForPopup(bonusMultiplier)}X`)
-        triggerEatParticles('apple', head.x, head.y)
-      }
-    }
-    previousSnakeLengthRef.current = game.snake.length
-  }, [
-    areFoodsPurple,
-    game.snake,
-    game.tickCount,
-    bonusMultiplier,
-    recoverBonusOffset,
-    triggerBoardEffect,
-    triggerDiscoBurst,
-    triggerEatParticles,
-    triggerPointsPopup,
-  ])
 
   useEffect(() => {
     if (areFoodsPurple && purpleFoodModeEatsLeft <= 0) {
@@ -584,9 +548,7 @@ export function useSnakeGame({ onRoundComplete }: UseSnakeGameParams) {
     purpleBonus,
   })
 
-  useEffect(() => {
-    latestStateRef.current = { game, yellowBonus, pinkBonus, purpleBonus }
-  }, [game, pinkBonus, purpleBonus, yellowBonus])
+  latestStateRef.current = { game, yellowBonus, pinkBonus, purpleBonus }
 
   useEffect(() => {
     if (!purpleBonus.active || game.status !== 'running') {
@@ -771,10 +733,16 @@ export function useSnakeGame({ onRoundComplete }: UseSnakeGameParams) {
 
   useEffect(() => {
     if (game.status !== 'running') {
+      didRunImmediateTickRef.current = false
+    }
+  }, [game.status])
+
+  useEffect(() => {
+    if (game.status !== 'running') {
       return
     }
 
-    const id = window.setInterval(() => {
+    const runTick = () => {
       const current = latestStateRef.current.game
       const head = current.snake[0]
       const wrappedEdge = willWrapOnNextMove(
@@ -785,6 +753,7 @@ export function useSnakeGame({ onRoundComplete }: UseSnakeGameParams) {
         current.height
       )
       const next = tick(current)
+      const nextHead = next.snake[0]
       const ateFood = next.snake.length > current.snake.length
       const appleBonus = ateFood
         ? areFoodsPurple
@@ -801,6 +770,29 @@ export function useSnakeGame({ onRoundComplete }: UseSnakeGameParams) {
         score: scoreBeforePenalty - pointsPenalty,
       })
 
+      if (ateFood) {
+        setPointAmplificationLevel((level) => level + 1)
+        setApplesEatenCount((count) => count + 1)
+
+        if (areFoodsPurple) {
+          setPurplePointsBoostStacks((stacks) => stacks + 1)
+          setPurpleSlowMotionExpiresAt(Date.now() + PURPLE_SLOW_MOTION_DURATION_MS)
+          recoverBonusOffset(PURPLE_BONUS_RECOVERY)
+          triggerBoardEffect('eat', 180)
+          triggerDiscoBurst(282, 340)
+          setYellowWaveKey((currentWave) => currentWave + 1)
+          triggerPointsPopup(`${formatBonusMultiplierForPopup(bonusMultiplier)}X`)
+          triggerEatParticles('purple', nextHead.x, nextHead.y)
+          setPurpleFoodModeEatsLeft((currentEats) => Math.max(0, currentEats - 1))
+        } else {
+          triggerBoardEffect('eat', 180)
+          triggerDiscoBurst(148, 260)
+          recoverBonusOffset(APPLE_BONUS_RECOVERY)
+          triggerPointsPopup(`${formatBonusMultiplierForPopup(bonusMultiplier)}X`)
+          triggerEatParticles('apple', nextHead.x, nextHead.y)
+        }
+      }
+
       if (shouldApplyWrapPenalty) {
         triggerBoardEffect('penalty', 120)
         setBonusMultiplierOffset((currentOffset) => {
@@ -810,7 +802,14 @@ export function useSnakeGame({ onRoundComplete }: UseSnakeGameParams) {
         })
         triggerPointsPopup('-10%', 'penalty')
       }
-    }, effectiveTickMs)
+    }
+
+    if (!didRunImmediateTickRef.current) {
+      runTick()
+      didRunImmediateTickRef.current = true
+    }
+
+    const id = window.setInterval(runTick, effectiveTickMs)
 
     return () => window.clearInterval(id)
   }, [
@@ -819,7 +818,10 @@ export function useSnakeGame({ onRoundComplete }: UseSnakeGameParams) {
     bonusMultiplier,
     effectiveTickMs,
     game.status,
+    recoverBonusOffset,
     triggerBoardEffect,
+    triggerDiscoBurst,
+    triggerEatParticles,
     triggerPointsPopup,
   ])
 

@@ -29,10 +29,12 @@ export default function SnakeGame({ topTenCutoffScore, onRoundComplete }: SnakeG
     purpleBonusKey,
     yellowBonusKey,
     pinkBonusKey,
+    togglePauseAction,
     restartAction,
   } = useSnakeGame({ onRoundComplete })
   const [isHighScoreHypeActive, setIsHighScoreHypeActive] = useState(false)
   const [highScoreHypeKey, setHighScoreHypeKey] = useState(0)
+  const [showPlayOverlay, setShowPlayOverlay] = useState(true)
   const previousScoreRef = useRef(game.score)
   const scoreEventsRef = useRef<Array<{ at: number; delta: number }>>([])
   const highScoreHypeTimeoutRef = useRef<number | null>(null)
@@ -72,10 +74,20 @@ export default function SnakeGame({ topTenCutoffScore, onRoundComplete }: SnakeG
       }
     }
   }, [])
+
+  useEffect(() => {
+    if (game.status === 'running' && showPlayOverlay) {
+      setShowPlayOverlay(false)
+    }
+  }, [game.status, showPlayOverlay])
   const scoreToTopTenProgress =
     topTenCutoffScore !== null && topTenCutoffScore > 0
       ? Math.max(0, Math.min(1, game.score / topTenCutoffScore))
       : 0
+  const handlePlay = () => {
+    restartAction()
+    setShowPlayOverlay(false)
+  }
 
   return (
     <section className="flex w-fit max-w-full flex-col gap-4 p-4 sm:p-6">
@@ -93,6 +105,8 @@ export default function SnakeGame({ topTenCutoffScore, onRoundComplete }: SnakeG
           height={game.height}
           status={game.status}
           onRestart={restartAction}
+          showPlayOverlay={showPlayOverlay}
+          onPlay={handlePlay}
           foodKeys={foodKeys}
           snakeCells={snakeCells}
           purpleBonusKey={purpleBonusKey}

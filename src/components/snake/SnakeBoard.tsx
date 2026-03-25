@@ -6,6 +6,8 @@ interface SnakeBoardProps {
   height: number
   status: GameStatus
   onRestart: () => void
+  showPlayOverlay: boolean
+  onPlay: () => void
   foodKeys: Set<string>
   snakeCells: Set<string>
   purpleBonusKey: string | null
@@ -39,6 +41,8 @@ export default function SnakeBoard({
   height,
   status,
   onRestart,
+  showPlayOverlay,
+  onPlay,
   foodKeys,
   snakeCells,
   purpleBonusKey,
@@ -173,6 +177,19 @@ export default function SnakeBoard({
 
   return (
     <div className="relative w-fit self-center rounded">
+      {showPlayOverlay && (
+        <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center">
+          <div className="min-w-[16rem] rounded border border-sky-400/60 bg-black/85 px-6 py-5 text-center shadow-[0_0_28px_rgba(56,189,248,0.55)] ring-1 ring-sky-300/60 sm:min-w-[19rem] sm:px-8 sm:py-6">
+            <button
+              type="button"
+              onClick={onPlay}
+              className="pointer-events-auto rounded border border-sky-300/80 bg-gray-900/95 px-6 py-3 font-mono text-xl font-black uppercase tracking-[0.18em] text-sky-100 shadow-[0_0_20px_rgba(56,189,248,0.65)] sm:text-2xl"
+            >
+              Play
+            </button>
+          </div>
+        </div>
+      )}
       {status === 'gameOver' && (
         <div key={`game-over-drop-${gameOverDropFxKey}`} className="pointer-events-none absolute inset-0 z-[45] overflow-hidden">
           {gameOverDropParticles.map((particle, index) => (
