@@ -9,6 +9,7 @@ import type { SnakeGameProps } from '@/components/snake/types'
 export default function SnakeGame({ topTenCutoffScore, highScore, onRoundComplete }: SnakeGameProps) {
   const RAPID_GAIN_WINDOW_MS = 1800
   const RAPID_GAIN_THRESHOLD = 1_000_000
+  const GAME_LOOP_AUDIO_PATH = '/audio/game-loop.mp3'
 
   const {
     game,
@@ -35,6 +36,7 @@ export default function SnakeGame({ topTenCutoffScore, highScore, onRoundComplet
   const [isHighScoreHypeActive, setIsHighScoreHypeActive] = useState(false)
   const [highScoreHypeKey, setHighScoreHypeKey] = useState(0)
   const [showPlayOverlay, setShowPlayOverlay] = useState(true)
+  const gameAudioRef = useRef<HTMLAudioElement | null>(null)
   const previousScoreRef = useRef(game.score)
   const scoreEventsRef = useRef<Array<{ at: number; delta: number }>>([])
   const highScoreHypeTimeoutRef = useRef<number | null>(null)
@@ -85,6 +87,17 @@ export default function SnakeGame({ topTenCutoffScore, highScore, onRoundComplet
       ? Math.max(0, Math.min(1, game.score / topTenCutoffScore))
       : 0
   const handlePlay = () => {
+    if (gameAudioRef.current === null) {
+      const audio = new Audio(GAME_LOOP_AUDIO_PATH)
+      audio.loop = true
+      audio.preload = 'auto'
+      gameAudioRef.current = audio
+    }
+    if (gameAudioRef.current.paused) {
+      void gameAudioRef.current.play().catch(() => {
+        // Ignore browser autoplay errors; user can click Play again.
+      })
+    }
     restartAction()
     setShowPlayOverlay(false)
   }
