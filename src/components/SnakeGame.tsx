@@ -23,9 +23,7 @@ export default function SnakeGame({ topTenCutoffScore, onRoundComplete }: SnakeG
     yellowWaveExpanded,
     areFoodsPurple,
     eatParticleBursts,
-    pointsPopupText,
-    pointsPopupTone,
-    pointsPopupId,
+    pointsPopups,
     snakeCells,
     foodKeys,
     purpleBonusKey,
@@ -111,9 +109,7 @@ export default function SnakeGame({ topTenCutoffScore, onRoundComplete }: SnakeG
           yellowWaveExpanded={yellowWaveExpanded}
           areFoodsPurple={areFoodsPurple}
           eatParticleBursts={eatParticleBursts}
-          pointsPopupText={pointsPopupText}
-          pointsPopupTone={pointsPopupTone}
-          pointsPopupId={pointsPopupId}
+          pointsPopups={pointsPopups}
         />
       </div>
       <p className="text-center text-xs text-gray-400">

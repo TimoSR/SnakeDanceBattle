@@ -164,7 +164,7 @@ export function useSnakeGame({ onRoundComplete }: UseSnakeGameParams) {
     id: number
     text: string
     tone: 'default' | 'penalty'
-  } | null>(null)
+  }[]>([])
   const [eatParticleBursts, setEatParticleBursts] = useState<EatParticleState[]>([])
   const [purpleBonus, setPurpleBonus] = useState<MovingBonusState>({
     active: false,
@@ -197,7 +197,7 @@ export function useSnakeGame({ onRoundComplete }: UseSnakeGameParams) {
   const discoBurstTimeoutRef = useRef<number | null>(null)
   const boardEffectStartTimeoutRef = useRef<number | null>(null)
   const boardEffectEndTimeoutRef = useRef<number | null>(null)
-  const pointsPopupTimeoutRef = useRef<number | null>(null)
+  const pointsPopupTimeoutsRef = useRef<number[]>([])
   const eatParticleBurstIdRef = useRef(0)
   const eatParticleTimeoutsRef = useRef<number[]>([])
   const lastBonusSpawnRollAppleRef = useRef(0)
@@ -259,18 +259,18 @@ export function useSnakeGame({ onRoundComplete }: UseSnakeGameParams) {
   }, [])
 
   const triggerPointsPopup = useCallback((text: string, tone: 'default' | 'penalty' = 'default') => {
-    setPointsPopup((current) => ({
-      id: (current?.id ?? 0) + 1,
-      text,
-      tone,
-    }))
-    if (pointsPopupTimeoutRef.current !== null) {
-      window.clearTimeout(pointsPopupTimeoutRef.current)
-    }
-    pointsPopupTimeoutRef.current = window.setTimeout(() => {
-      setPointsPopup(null)
-      pointsPopupTimeoutRef.current = null
+    let popupId = 0
+    setPointsPopup((current) => {
+      popupId = ((current.length > 0 ? current[current.length - 1].id : 0) + 1)
+      return [...current, { id: popupId, text, tone }].slice(-6)
+    })
+    const timeoutId = window.setTimeout(() => {
+      setPointsPopup((current) => current.filter((popup) => popup.id !== popupId))
+      pointsPopupTimeoutsRef.current = pointsPopupTimeoutsRef.current.filter(
+        (activeTimeoutId) => activeTimeoutId !== timeoutId
+      )
     }, 520)
+    pointsPopupTimeoutsRef.current.push(timeoutId)
   }, [])
 
   const triggerEatParticles = useCallback((color: EatParticleColor, x: number, y: number) => {
@@ -308,9 +308,10 @@ export function useSnakeGame({ onRoundComplete }: UseSnakeGameParams) {
       if (boardEffectEndTimeoutRef.current !== null) {
         window.clearTimeout(boardEffectEndTimeoutRef.current)
       }
-      if (pointsPopupTimeoutRef.current !== null) {
-        window.clearTimeout(pointsPopupTimeoutRef.current)
+      for (const timeoutId of pointsPopupTimeoutsRef.current) {
+        window.clearTimeout(timeoutId)
       }
+      pointsPopupTimeoutsRef.current = []
       for (const timeoutId of eatParticleTimeoutsRef.current) {
         window.clearTimeout(timeoutId)
       }
@@ -414,7 +415,7 @@ export function useSnakeGame({ onRoundComplete }: UseSnakeGameParams) {
       setBonusMultiplierOffset(0)
       setIsDiscoBurstActive(false)
       setDiscoBurstHue(null)
-      setPointsPopup(null)
+      setPointsPopup([])
       setEatParticleBursts([])
       lastBonusSpawnRollAppleRef.current = 0
     }
@@ -881,9 +882,7 @@ export function useSnakeGame({ onRoundComplete }: UseSnakeGameParams) {
     yellowWaveExpanded,
     areFoodsPurple,
     eatParticleBursts,
-    pointsPopupText: pointsPopup?.text ?? null,
-    pointsPopupTone: pointsPopup?.tone ?? 'default',
-    pointsPopupId: pointsPopup?.id ?? 0,
+    pointsPopups: pointsPopup,
     snakeCells,
     foodKeys,
     purpleBonusKey,

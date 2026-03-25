@@ -27,9 +27,11 @@ interface SnakeBoardProps {
     x: number
     y: number
   }>
-  pointsPopupText: string | null
-  pointsPopupTone: 'default' | 'penalty'
-  pointsPopupId: number
+  pointsPopups: Array<{
+    id: number
+    text: string
+    tone: 'default' | 'penalty'
+  }>
 }
 
 export default function SnakeBoard({
@@ -53,9 +55,7 @@ export default function SnakeBoard({
   yellowWaveExpanded,
   areFoodsPurple,
   eatParticleBursts,
-  pointsPopupText,
-  pointsPopupTone,
-  pointsPopupId,
+  pointsPopups,
 }: SnakeBoardProps) {
   const [gameOverDropFxKey, setGameOverDropFxKey] = useState(0)
   const previousStatusRef = useRef(status)
@@ -66,15 +66,6 @@ export default function SnakeBoard({
     }
     previousStatusRef.current = status
   }, [status])
-
-  const pointsPopupSizeClass =
-    pointsPopupText === '1.5X'
-      ? 'text-7xl'
-      : pointsPopupText === '5X'
-        ? 'text-8xl'
-        : pointsPopupText === '10X'
-          ? 'text-9xl'
-          : 'text-8xl'
 
   const cells: JSX.Element[] = []
   const particleVectors = [
@@ -216,20 +207,32 @@ export default function SnakeBoard({
           </div>
         </div>
       )}
-      {pointsPopupText && (
-        <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
-          <span
-            key={pointsPopupId}
-            className={`${
-              pointsPopupTone === 'penalty'
-                ? 'snake-points-popup-penalty text-red-400'
-                : 'snake-points-popup text-yellow-300'
-            } ${pointsPopupSizeClass} font-black tracking-wider`}
+      {pointsPopups.map((popup) => {
+        const pointsPopupSizeClass =
+          popup.text === '1.5X'
+            ? 'text-7xl'
+            : popup.text === '5X'
+              ? 'text-8xl'
+              : popup.text === '10X'
+                ? 'text-9xl'
+                : 'text-8xl'
+        return (
+          <div
+            key={popup.id}
+            className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center"
           >
-            {pointsPopupText}
-          </span>
-        </div>
-      )}
+            <span
+              className={`${
+                popup.tone === 'penalty'
+                  ? 'snake-points-popup-penalty text-red-400'
+                  : 'snake-points-popup text-yellow-300'
+              } ${pointsPopupSizeClass} font-black tracking-wider`}
+            >
+              {popup.text}
+            </span>
+          </div>
+        )
+      })}
       {eatParticleBursts.map((burst) => {
         const activeRippleOffsets =
           burst.color === 'purple'
