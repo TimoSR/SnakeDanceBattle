@@ -177,6 +177,27 @@ body {
   animation: snake-highscore-hype 780ms ease-out both;
 }
 
+@keyframes snake-highscore-hype-epic-finish {
+  0% {
+    text-shadow: 0 0 0 rgba(255, 255, 255, 0);
+  }
+  68% {
+    text-shadow: 0 0 0 rgba(255, 255, 255, 0);
+  }
+  82% {
+    text-shadow: 0 0 14px rgba(216, 180, 255, 0.85);
+  }
+  100% {
+    text-shadow: 0 0 22px rgba(216, 180, 255, 0.98);
+  }
+}
+
+.snake-highscore-hype-epic {
+  animation:
+    snake-highscore-hype 780ms ease-out both,
+    snake-highscore-hype-epic-finish 780ms ease-out both;
+}
+
 @keyframes snake-gameover-drop {
   0% {
     opacity: 0.95;

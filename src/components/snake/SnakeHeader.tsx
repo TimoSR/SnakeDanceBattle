@@ -13,10 +13,13 @@ export default function SnakeHeader({
   isHighScoreHypeActive,
   highScoreHypeKey,
 }: SnakeHeaderProps) {
+  const EPIC_SCORE_THRESHOLD = 1_000_000
   const progress = Math.max(0, Math.min(1, scoreToTopTenProgress))
   const isAboveHighScore = score > highScore
+  const shouldShowEpicGlow =
+    isHighScoreHypeActive && isAboveHighScore && score >= EPIC_SCORE_THRESHOLD
   const epicProgress =
-    isAboveHighScore && highScore >= 0
+    shouldShowEpicGlow && highScore >= 0
       ? Math.max(0, Math.min(1, (score - highScore) / Math.max(100, highScore * 0.35)))
       : 0
 
@@ -35,16 +38,11 @@ export default function SnakeHeader({
         key={highScoreHypeKey}
         className={`text-left drop-shadow-[0_0_8px_rgba(248,250,252,0.25)] ${
           isHighScoreHypeActive ? 'snake-highscore-hype text-amber-300' : ''
-        }`}
+        } ${shouldShowEpicGlow ? 'snake-highscore-hype-epic' : ''}`}
         style={
-          isAboveHighScore
+          shouldShowEpicGlow
             ? {
-                textShadow: `0 0 ${8 + epicProgress * 18}px rgba(216,180,255,0.95)`,
-                boxShadow: `0 0 ${14 + epicProgress * 20}px rgba(255,255,255,0.62), inset 0 0 ${
-                  8 + epicProgress * 12
-                }px rgba(255,255,255,0.22)`,
-                borderRadius: '0.35rem',
-                paddingInline: '0.35rem',
+                ['--snake-epic-progress' as string]: epicProgress,
               }
             : undefined
         }
