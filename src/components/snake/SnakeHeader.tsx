@@ -21,9 +21,9 @@ export default function SnakeHeader({
   isHighScoreHypeActive,
   highScoreHypeKey,
 }: SnakeHeaderProps) {
-  const HUNDREDS_THRESHOLD = 100
-  const MILLIONS_THRESHOLD = 1_000_000
-  const BILLIONS_THRESHOLD = 1_000_000_000
+  const HUNDREDS_THRESHOLD = 100_000
+  const MILLIONS_THRESHOLD = 1_000_000_000
+  const BILLIONS_THRESHOLD = 1_000_000_000_000
   const hasBillionEnergy = score >= BILLIONS_THRESHOLD
 
   let red = 229
